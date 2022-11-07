@@ -5,5 +5,8 @@ covent-config.cmake
 covent-config-version.cmake
 covent-targets.cmake
 examples/sleep
+include/covent/evloops.hh
+include/covent/evloops_*.hh
 libcovent.so
 Makefile
+src/evloops_*.cc

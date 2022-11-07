@@ -12,11 +12,29 @@ find_package ( headerfu
 
 pkg_search_module( LIBURING REQUIRED liburing )
 
+set ( EVLOOPS uring )
+
+foreach( EVLOOP ${EVLOOPS} )
+  configure_file(
+    include/covent/evloops_EVLOOP.hh.in
+    include/covent/evloops_${EVLOOP}.hh
+  )
+  set(
+    EVLOOPS_INCLUDE
+    "${EVLOOPS_INCLUDE}#include <covent/evloops_${EVLOOP}.hh>\n"
+  )
+endforeach()
+
+configure_file(
+  include/covent/evloops.hh.in
+  include/covent/evloops.hh
+)
+
 add_library(
   covent SHARED
   src/base.cc
   src/exceptions.cc
-  src/uring/event_loop.cc
+  src/uring/evloop.cc
   src/uring/event_awaiters.cc
 )
 

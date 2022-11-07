@@ -16,24 +16,24 @@
 #define COVENT_URING_EVENT_AWAITERS_HH
 
 #include "../impl.hh"
-#include "event_loop.hh"
+#include "evloop.hh"
 
-namespace covent {
+namespace covent::uring {
 
-  class awaiter_sqe : public event_awaiter_impl {
+  class awaiter_sqe : public covent::detail::event_awaiter_impl {
     protected:
-      event_loop_uring& loop;
-      event_loop_uring::res_t res = 0;
-      event_loop_uring::flags_t flags = 0;
+      evloop& loop;
+      res_t res = 0;
+      flags_t flags = 0;
 
     public:
-      awaiter_sqe(event_loop_uring&);
+      awaiter_sqe(evloop&);
 
       bool await_ready();
       void await_suspend();
       void await_resume();
 
-      void complete(event_loop_uring::res_t, event_loop_uring::flags_t);
+      void complete(res_t, flags_t);
 
       virtual void setup_sqe(io_uring_sqe*) = 0;
       virtual void on_resume() = 0;
@@ -44,7 +44,7 @@ namespace covent {
       __kernel_timespec ts;
 
     public:
-      awaiter_sqe_sleep(event_loop_uring&, std::chrono::nanoseconds&&);
+      awaiter_sqe_sleep(evloop&, std::chrono::nanoseconds&&);
 
       void setup_sqe(io_uring_sqe*);
       void on_resume();

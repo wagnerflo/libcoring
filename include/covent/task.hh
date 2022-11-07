@@ -16,6 +16,7 @@
 #define COVENT_TASK_HH
 
 #include <covent/base.hh>
+#include <covent/concepts.hh>
 #include <covent/exceptions.hh>
 
 #include <coroutine>
@@ -24,8 +25,9 @@
 #include <utility>
 #include <variant>
 
-namespace covent {
+namespace covent::detail {
 
+  // ...
   class final_awaiter {
     public:
       bool await_ready() const noexcept {
@@ -46,17 +48,12 @@ namespace covent {
       }
   };
 
+  // ...
   template<
-    typename ResultType,
-    typename InitialSuspendType
-  >
-  class task;
-
-  template<
-    typename InitialSuspendType,
+    concepts::Awaitable InitialSuspendType,
     typename TaskType,
     typename ResultType
-  >
+    >
   class promise final {
     friend final_awaiter;
     friend TaskType;
@@ -86,7 +83,7 @@ namespace covent {
         >;
 
     protected:
-      event_loop_impl_base& loop;
+      detail::evloop_base& loop;
       std::coroutine_handle<> parent;
       ResultHolderType result;
 
@@ -131,14 +128,9 @@ namespace covent {
           result.template emplace<1>(std::monostate {});
       }
 
-      template<typename T1, typename T2>
-      task<T1, T2>&& await_transform(task<T1, T2>&& t) const noexcept {
-        return std::forward<task<T1, T2>>(t);
-      }
-
-      template<typename T1, typename T2>
-      task<T1, T2>&& await_transform(task<T1, T2>& t) const noexcept {
-        return std::forward<task<T1, T2>>(t);
+      template<concepts::Awaitable T>
+      decltype(auto) await_transform(T&& aw) {
+        return std::forward<T>(aw);
       }
 
       template<typename ...Args>
@@ -147,16 +139,19 @@ namespace covent {
       }
   };
 
+}
 
-  // ...
+namespace covent {
+
+    // ...
   template<
     typename ResultType = void,
-    typename InitialSuspendType = std::suspend_always
+    concepts::Awaitable InitialSuspendType = std::suspend_always
   >
   class [[nodiscard]] task {
     public:
       using result_type = ResultType;
-      using promise_type = promise<
+      using promise_type = detail::promise<
         InitialSuspendType,
         task,
         ResultType
@@ -165,6 +160,28 @@ namespace covent {
 
     protected:
       handle_type coro;
+      bool was_started = true;
+
+      void start() const noexcept {
+        if (done())
+          throw std::runtime_error("Cannot start a task that is already done.");
+
+        if (was_started)
+          throw std::runtime_error("Cannot start a task that is already running.");
+
+        was_started = true;
+        coro.resume();
+      }
+
+      void resume() const noexcept {
+        if (!was_started)
+          throw std::runtime_error("Cannot resume a task that is not running.");
+
+        if (done())
+          throw std::runtime_error("Cannot resume a task that is already done.");
+
+        coro.resume();
+      }
 
     public:
       task() = delete;
@@ -192,6 +209,10 @@ namespace covent {
       ~task() noexcept {
         if (coro != nullptr)
           coro.destroy();
+      }
+
+      bool started() const noexcept {
+        return was_started;
       }
 
       bool done() const noexcept {
@@ -242,11 +263,6 @@ namespace covent {
       }
   };
 
-  template<typename ResultType>
-  using entry_task = task<
-    ResultType,
-    std::suspend_never
-  >;
 }
 
 #endif

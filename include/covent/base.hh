@@ -18,18 +18,10 @@
 #include <coroutine>
 #include <chrono>
 
-namespace covent {
+namespace covent::detail {
 
   // forward declarations of implementation interfaces
   class event_awaiter_impl;
-  class task_runner;
-
-  // forward declarations of supported event loops
-  class event_loop_uring;
-
-  // default event loop type
-  using DefaultEventLoopType = event_loop_uring;
-
 
   // ...
   class event_awaiter {
@@ -50,14 +42,16 @@ namespace covent {
   };
 
 
-  class event_loop_impl_base {
+  // ...
+  class evloop_base {
     public:
       virtual void run_once() = 0;
       virtual event_awaiter create_event_awaiter(std::chrono::nanoseconds&&) = 0;
   };
 
-  void set_active_loop(event_loop_impl_base*);
-  event_loop_impl_base& get_active_loop();
+  // ...
+  void set_active_loop(evloop_base*);
+  evloop_base& get_active_loop();
 
 }
 

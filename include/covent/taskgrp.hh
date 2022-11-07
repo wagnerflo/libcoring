@@ -12,24 +12,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef COVENT_IMPL_HH
-#define COVENT_IMPL_HH
+#ifndef COVENT_TASKGRP_HH
+#define COVENT_TASKGRP_HH
 
-#include <covent/base.hh>
-
-namespace covent::detail {
-
-  class event_awaiter_impl {
-    friend class event_awaiter;
-
-    protected:
-      std::coroutine_handle<> parent = nullptr;
-
-    public:
-      virtual bool await_ready() = 0;
-      virtual void await_suspend() = 0;
-      virtual void await_resume() = 0;
-  };
+namespace covent {
 
 }
 

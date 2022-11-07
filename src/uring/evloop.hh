@@ -12,23 +12,31 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef COVENT_IMPL_HH
-#define COVENT_IMPL_HH
+#ifndef COVENT_URING_EVENT_LOOP_HH
+#define COVENT_URING_EVENT_LOOP_HH
 
 #include <covent/base.hh>
+#include <covent/event_loop.hh>
+#include <liburing.h>
 
-namespace covent::detail {
+namespace covent::uring {
 
-  class event_awaiter_impl {
-    friend class event_awaiter;
+  using res_t = __s32;
+  using flags_t = __u32;
 
-    protected:
-      std::coroutine_handle<> parent = nullptr;
+  class awaiter_sqe;
+
+  class evloop : public covent::detail::evloop_base {
+    private:
+      io_uring ring = {};
 
     public:
-      virtual bool await_ready() = 0;
-      virtual void await_suspend() = 0;
-      virtual void await_resume() = 0;
+      evloop(const covent::event_loop_config&&);
+      ~evloop();
+
+      void run_once();
+      io_uring_sqe* create_sqe(awaiter_sqe*);
+      covent::detail::event_awaiter create_event_awaiter(std::chrono::nanoseconds&&);
   };
 
 }

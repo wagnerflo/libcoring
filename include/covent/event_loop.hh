@@ -16,6 +16,7 @@
 #define COVENT_EVENT_LOOP_HH
 
 #include <covent/base.hh>
+#include <covent/evloops.hh>
 #include <covent/task.hh>
 
 #include <any>
@@ -24,24 +25,44 @@
 #include <string>
 #include <utility>
 
+namespace covent::detail {
+
+  template<typename ResultType>
+  using entry_task = task<
+    ResultType,
+    std::suspend_never
+  >;
+
+}
+
 namespace covent {
 
-  using event_loop_config = std::map<std::string, std::any>;
+  class event_loop_config {
+    protected:
+      std::map<std::string, std::any> values;
 
-  template<typename T>
-  T get_event_loop_config(const event_loop_config& conf, std::string&& key, T&& def) {
-    if (auto item = conf.find(key); item != conf.end())
-      return std::any_cast<T>(item);
-    return def;
-  }
+    public:
+      event_loop_config(std::initializer_list<decltype(values)::value_type>&& v)
+        : values(std::forward<decltype(v)>(v)) {
+        /* nothing to do here */
+      }
+
+      template<typename T, typename C = T>
+        requires std::is_convertible_v<T, C>
+      T get(std::string&& key, T&& def) const {
+        if (auto item = values.find(key); item != values.end())
+          return static_cast<C>(std::any_cast<T>(item->second));
+        return def;
+      }
+  };
 
   class event_loop {
     protected:
-      event_loop_impl_base* impl;
+      detail::evloop_base* impl;
 
     public:
-      template<typename ImplType = event_loop_uring>
-      event_loop(const event_loop_config&& = {});
+      template<typename ImplType = DefaultEventLoopType>
+      event_loop(const event_loop_config&& conf = {});
 
       // not copyable
       event_loop(const event_loop&) = delete;
@@ -55,13 +76,13 @@ namespace covent {
       decltype(auto) run(Func const& func, Args&& ...args) {
         using Task = std::result_of_t<Func(Args...)>;
         using Result = Task::result_type;
-        set_active_loop(impl);
-        auto tsk = [&]() -> entry_task<Result> {
+        detail::set_active_loop(impl);
+        auto tsk = [&]() -> detail::entry_task<Result> {
           co_return co_await func(std::forward<Args>(args)...);
         }();
         while (!tsk.done())
           impl->run_once();
-        set_active_loop(nullptr);
+        detail::set_active_loop(nullptr);
         if constexpr(!Task::promise_type::ResultIsVoid)
           return tsk.result();
       }

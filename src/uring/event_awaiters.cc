@@ -14,48 +14,51 @@
  */
 
 #include "event_awaiters.hh"
-#include "event_loop.hh"
+#include "evloop.hh"
 
-covent::awaiter_sqe::awaiter_sqe(event_loop_uring& l)
-  : loop(l) {
-  /* nothing to do here */
-}
+namespace covent::uring {
 
-bool covent::awaiter_sqe::await_ready() {
-  return false;
-}
+  awaiter_sqe::awaiter_sqe(evloop& l)
+    : loop(l) {
+    /* nothing to do here */
+  }
 
-void covent::awaiter_sqe::await_suspend() {
-  setup_sqe(loop.create_sqe(this));
-}
+  bool awaiter_sqe::await_ready() {
+    return false;
+  }
 
-void covent::awaiter_sqe::await_resume() {
-  on_resume();
-}
+  void awaiter_sqe::await_suspend() {
+    setup_sqe(loop.create_sqe(this));
+  }
 
-void covent::awaiter_sqe::complete(event_loop_uring::res_t r,
-                                   event_loop_uring::flags_t f) {
-  res = r;
-  flags = f;
-  parent.resume();
-}
+  void awaiter_sqe::await_resume() {
+    on_resume();
+  }
+
+  void awaiter_sqe::complete(res_t r, flags_t f) {
+    res = r;
+    flags = f;
+    if (parent != nullptr && !parent.done())
+      parent.resume();
+  }
 
 
-covent::awaiter_sqe_sleep::awaiter_sqe_sleep(event_loop_uring& l,
-                                             std::chrono::nanoseconds&& ns)
-  : awaiter_sqe(l) {
-  auto secs = duration_cast<std::chrono::seconds>(ns);
-  ts = {
-    secs.count(),
-    (ns - secs).count()
-  };
+  awaiter_sqe_sleep::awaiter_sqe_sleep(evloop& l,
+                                       std::chrono::nanoseconds&& ns)
+    : awaiter_sqe(l) {
+    auto secs = duration_cast<std::chrono::seconds>(ns);
+    ts = {
+      secs.count(),
+      (ns - secs).count()
+    };
+  }
 
-}
+  void awaiter_sqe_sleep::setup_sqe(io_uring_sqe* sqe) {
+    io_uring_prep_timeout(sqe, &ts, 1, 0);
+  }
 
-void covent::awaiter_sqe_sleep::setup_sqe(io_uring_sqe* sqe) {
-  io_uring_prep_timeout(sqe, &ts, 1, 0);
-}
+  void awaiter_sqe_sleep::on_resume() {
+    /* nothing to do here */
+  }
 
-void covent::awaiter_sqe_sleep::on_resume() {
-  /* nothing to do here */
 }

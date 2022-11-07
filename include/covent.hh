@@ -13,6 +13,4 @@
  * limitations under the License.
  */
 
-#include <covent/exceptions.hh>
 #include <covent/event_loop.hh>
-#include <covent/task.hh>

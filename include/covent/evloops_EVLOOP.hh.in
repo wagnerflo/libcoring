@@ -12,34 +12,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef COVENT_URING_EVENT_LOOP_HH
-#define COVENT_URING_EVENT_LOOP_HH
 
-#include <covent/base.hh>
-#include <covent/event_loop.hh>
-#include <liburing.h>
+#ifndef COVENT_EVLOOPS_@EVLOOP@_HH
+#define COVENT_EVLOOPS_@EVLOOP@_HH
+
+namespace covent::@EVLOOP@ {
+  // forward declaration of event loop implementation
+  class evloop;
+}
 
 namespace covent {
-
-  class awaiter_sqe;
-
-  class event_loop_uring : public event_loop_impl_base {
-    public:
-      using res_t = __s32;
-      using flags_t = __u32;
-
-    private:
-      io_uring ring = {};
-
-    public:
-      event_loop_uring(const event_loop_config&&);
-      ~event_loop_uring();
-
-      void run_once();
-      io_uring_sqe* create_sqe(awaiter_sqe*);
-      event_awaiter create_event_awaiter(std::chrono::nanoseconds&&);
-  };
-
+  // type aliases for event loop implementation
+  using evloop_@EVLOOP@ = covent::@EVLOOP@::evloop;
 }
 
 #endif
