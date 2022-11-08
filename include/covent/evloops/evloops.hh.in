@@ -12,18 +12,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#ifndef COVENT_EVLOOPS_HH
+#define COVENT_EVLOOPS_HH
 
-#ifndef COVENT_EVLOOPS_@EVLOOP@_HH
-#define COVENT_EVLOOPS_@EVLOOP@_HH
-
-namespace covent::@EVLOOP@ {
-  // forward declaration of event loop implementation
-  class evloop;
-}
+@EVLOOPS_INCLUDE@
 
 namespace covent {
-  // type aliases for event loop implementation
-  using evloop_@EVLOOP@ = covent::@EVLOOP@::evloop;
+  // default event loop type
+  using DefaultEventLoopType = evloop_uring;
 }
 
 #endif

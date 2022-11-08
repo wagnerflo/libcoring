@@ -27,6 +27,41 @@
 
 namespace covent::detail {
 
+  template <concepts::Awaitable T>
+  class id_awaiter {
+    public:
+      using result_type =
+        decltype(std::declval<T>().await_resume());
+
+      constexpr static bool ResultIsVoid =
+        std::is_void_v<result_type>;
+
+    protected:
+      T& aw;
+
+    public:
+      id_awaiter(T& a) : aw(a) {
+        /* nothing to do here */
+      }
+
+      bool await_ready() {
+        return aw.await_ready();
+      }
+
+      std::coroutine_handle<> await_suspend(std::coroutine_handle<> awaiting_coro) {
+        return aw.await_suspend(awaiting_coro);
+      }
+
+      template<typename V = result_type>
+      V& await_resume() const requires (!ResultIsVoid) {
+        return aw.await_resume();
+      }
+
+      void await_resume() const requires (ResultIsVoid) {
+        aw.await_resume();
+      }
+  };
+
   // ...
   class final_awaiter {
     public:
@@ -53,7 +88,7 @@ namespace covent::detail {
     concepts::Awaitable InitialSuspendType,
     typename TaskType,
     typename ResultType
-    >
+  >
   class promise final {
     friend final_awaiter;
     friend TaskType;
@@ -129,8 +164,8 @@ namespace covent::detail {
       }
 
       template<concepts::Awaitable T>
-      decltype(auto) await_transform(T&& aw) {
-        return std::forward<T>(aw);
+      id_awaiter<std::remove_reference_t<T>> await_transform(T&& aw) {
+        return { aw };
       }
 
       template<typename ...Args>
@@ -143,7 +178,7 @@ namespace covent::detail {
 
 namespace covent {
 
-    // ...
+  // ...
   template<
     typename ResultType = void,
     concepts::Awaitable InitialSuspendType = std::suspend_always

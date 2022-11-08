@@ -12,8 +12,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef COVENT_URING_EVENT_LOOP_HH
-#define COVENT_URING_EVENT_LOOP_HH
+#ifndef COVENT_URING_EVLOOP_HH
+#define COVENT_URING_EVLOOP_HH
 
 #include <covent/base.hh>
 #include <covent/event_loop.hh>

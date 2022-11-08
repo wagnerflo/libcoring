@@ -16,26 +16,26 @@ set ( EVLOOPS uring )
 
 foreach( EVLOOP ${EVLOOPS} )
   configure_file(
-    include/covent/evloops_EVLOOP.hh.in
-    include/covent/evloops_${EVLOOP}.hh
+    include/covent/evloops/EVLOOP.hh.in
+    include/covent/evloops/${EVLOOP}.hh
   )
   set(
     EVLOOPS_INCLUDE
-    "${EVLOOPS_INCLUDE}#include <covent/evloops_${EVLOOP}.hh>\n"
+    "${EVLOOPS_INCLUDE}#include <covent/evloops/${EVLOOP}.hh>\n"
   )
 endforeach()
 
 configure_file(
-  include/covent/evloops.hh.in
-  include/covent/evloops.hh
+  include/covent/evloops/evloops.hh.in
+  include/covent/evloops/evloops.hh
 )
 
 add_library(
   covent SHARED
   src/base.cc
   src/exceptions.cc
+  src/uring/awaiters.cc
   src/uring/evloop.cc
-  src/uring/event_awaiters.cc
 )
 
 target_compile_features( covent PUBLIC cxx_std_20 )

@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-#include "event_awaiters.hh"
+#include "awaiters.hh"
 #include "evloop.hh"
 
 namespace covent {

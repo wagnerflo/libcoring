@@ -12,8 +12,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef COVENT_URING_EVENT_AWAITERS_HH
-#define COVENT_URING_EVENT_AWAITERS_HH
+#ifndef COVENT_URING_AWAITERS_HH
+#define COVENT_URING_AWAITERS_HH
 
 #include "../impl.hh"
 #include "evloop.hh"

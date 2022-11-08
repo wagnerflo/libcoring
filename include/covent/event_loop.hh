@@ -25,16 +25,6 @@
 #include <string>
 #include <utility>
 
-namespace covent::detail {
-
-  template<typename ResultType>
-  using entry_task = task<
-    ResultType,
-    std::suspend_never
-  >;
-
-}
-
 namespace covent {
 
   class event_loop_config {
@@ -75,12 +65,12 @@ namespace covent {
       template<typename Func, typename ...Args>
       decltype(auto) run(Func const& func, Args&& ...args) {
         using Task = std::result_of_t<Func(Args...)>;
-        using Result = Task::result_type;
         detail::set_active_loop(impl);
-        auto tsk = [&]() -> detail::entry_task<Result> {
-          co_return co_await func(std::forward<Args>(args)...);
+        auto tsk = func(std::forward<Args>(args)...);
+        auto entry = [&tsk]() -> task<void, std::suspend_never> {
+          co_await tsk;
         }();
-        while (!tsk.done())
+        while (!entry.done())
           impl->run_once();
         detail::set_active_loop(nullptr);
         if constexpr(!Task::promise_type::ResultIsVoid)

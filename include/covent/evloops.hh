@@ -13,13 +13,4 @@
  * limitations under the License.
  */
 
-#include <covent/exceptions.hh>
-
-namespace covent {
-
-  broken_promise::broken_promise()
-    : std::logic_error("broken promise") {
-    /* empty */
-  }
-
-}
+#include <covent/evloops/evloops.hh>
