@@ -33,6 +33,7 @@ configure_file(
 add_library(
   covent SHARED
   src/base.cc
+  src/event_loop.cc
   src/exceptions.cc
   src/uring/awaiters.cc
   src/uring/evloop.cc

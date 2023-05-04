@@ -21,9 +21,33 @@
 
 #include <any>
 #include <map>
-#include <memory>
 #include <string>
 #include <utility>
+
+namespace covent::detail {
+
+  class first_task final {
+    public:
+      class promise_type {
+        public:
+          first_task get_return_object() noexcept;
+          std::suspend_never initial_suspend() const noexcept;
+          std::suspend_always final_suspend() const noexcept;
+          void return_void() const noexcept;
+          void unhandled_exception() const noexcept;
+      };
+
+      using handle_type = std::coroutine_handle<promise_type>;
+
+    protected:
+      handle_type coro;
+
+    public:
+      first_task(handle_type) noexcept;
+      bool done() const noexcept;
+  };
+
+}
 
 namespace covent {
 
@@ -67,14 +91,13 @@ namespace covent {
         using Task = std::result_of_t<Func(Args...)>;
         detail::set_active_loop(impl);
         auto tsk = func(std::forward<Args>(args)...);
-        auto entry = [&tsk]() -> task<void, std::suspend_never> {
+        auto entry = [&tsk]() -> detail::first_task {
           co_await tsk;
         }();
         while (!entry.done())
           impl->run_once();
         detail::set_active_loop(nullptr);
-        if constexpr(!Task::promise_type::ResultIsVoid)
-          return tsk.result();
+        return tsk.result();
       }
   };
 
